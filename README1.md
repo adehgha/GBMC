@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #GBMC
 
 GBMC stands for Grain Boundary Monte-Carlo simulation. 
@@ -65,3 +66,7 @@ Banadaki A.D., Tschopp M.A., Patala S., An efficient Monte Carlo algorithm for d
 **Authors**: [Arash D. Banadaki](adehgha@ncsu.edu), [Srikanth Patala](spatala@ncsu.edu)
 
 Copyright (c) 2018 , North Carolina State University 
+=======
+# GBMC
+
+>>>>>>> c30315ccbf80136600b3fbc202639ef204037693
