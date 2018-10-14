@@ -1,0 +1,4 @@
+pair_style eam/alloy
+pair_coeff * * ni1.set Ni Ni
+neighbor 2.0 bin 
+neigh_modify delay 10 check yes 

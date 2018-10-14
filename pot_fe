@@ -1,0 +1,4 @@
+pair_style eam/alloy
+pair_coeff * * Fe_2.eam.fs Fe Fe
+neighbor 2.0 bin 
+neigh_modify delay 10 check yes 

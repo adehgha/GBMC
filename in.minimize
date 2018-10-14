@@ -1,0 +1,144 @@
+# LAMMPS Input File
+# Mark Tschopp, May2015
+# Command syntax tested on 15May15 LAMMPS version
+
+# DESCRIPTION
+# This file will read in a grain boundary LAMMPS datafile (fname1) for a particular potential (potname1) and will then convert this to a new grain boundary LAMMPS datafile (fname2) with a different potential (potname2).  This is currently set up for 2 fcc potentials, but could easily be extended to other cubic crystal structures that contain one atom type in the unit cell.   
+
+# VARIABLES PASSED IN THROUGH COMMAND LINE
+# variable potname1, potname2, fname1, fname2
+# i.e., "lmp_exe -var potname1 potential_Al99.txt -var potname2 potential_Cu01.txt -var fname1 lammps.Al.sigma3_1.dat -var fname2 lammps.CuAl.sigma3_1.dat < in.GB_convert_AtoB.txt"
+
+# ROUTINES REQUIRED
+# in.minimum_energy.txt
+# 2 potential files (e.g., potential_Al99.txt, potential_Cu01.txt) - this is input as a separate file through the include command so as to allow for different potential formulations and options
+
+# Obtain the lattice constant for fcc unit cell with both potential types (stored as variable latconst1 and latconst2)
+# ----------
+# variable potname string ${potname1}
+# include in.minimum_energy.txt
+# variable latconst1 equal ${latconst}
+
+# variable potname string ${potname2}
+# include in.minimum_energy.txt
+# variable latconst2 equal ${latconst}
+
+# print "latconst1 = ${latconst1}"
+# print "latconst2 = ${latconst2}"
+
+# Obtain the expansion of the simulation cell required
+# ----------
+# variable expansion equal ${latconst2}/${latconst1}
+# variable expansion equal 0.8925925926
+# print "expansion = ${expansion}" 
+
+# ---------- Setup Variables --------------------- 
+variable etol equal 1.0e-25 
+variable ftol equal 1.0e-25 
+#variable etol equal 1.0e-6
+#variable ftol equal 1.0e-6
+variable maxiter equal 5000 
+variable maxeval equal 10000 
+
+# ---------- Initialize Simulation --------------------- 
+clear 
+units metal 
+dimension 3 
+boundary p f p 
+atom_style atomic 
+atom_modify map array
+
+box tilt large
+read_data ${fname1}
+# read_dump dump.1907 0 x y z box yes
+# replicate 1 1 1
+
+# ---------- Define Interatomic Potential --------------------- 
+include ${potname2}
+
+compute csym all centro/atom ${lat_type}
+compute eng all pe/atom
+compute eatoms all reduce sum c_eng
+compute MinAtomEnergy all reduce min c_eng
+# ---------- Run Minimization --------------------- 
+#write_data "dump.before_minimization"
+
+reset_timestep 0 
+thermo 10 
+thermo_style custom step pe lx ly lz xy xz yz xlo xhi ylo yhi zlo zhi press pxx pyy pzz
+thermo_modify lost ignore
+min_style cg 
+# fix 1 all box/relax y 0.0 vmax 0.001
+minimize ${etol} ${ftol} ${maxiter} ${maxeval} 
+
+# write_data ${fname2} 
+reset_timestep 0 
+thermo 10 
+thermo_style custom step pe lx ly lz xy xz yz xlo xhi ylo yhi zlo zhi press pxx pyy pzz
+thermo_modify lost ignore
+min_style cg 
+dump 2 all custom 1000 ${fname2} id type x y z c_csym c_eng
+run 0 
+undump 2
+# ------------Calculating the GB Energy------------
+variable MinEnergy equal ${min_eng}
+# variable MinEnergy equal -3.53999996838
+# variable MinEnergy equal -3.36000010077
+#variable MinEnergy equal -3.54021833020492
+compute ymin all reduce min y
+compute ymax all reduce max y
+thermo_style custom step pe c_ymax c_ymin
+thermo_modify lost ignore
+run 0
+variable y_min equal "c_ymin"
+variable y_max equal "c_ymax"
+variable mid_y_u equal "c_ymax / 2"
+variable mid_y_l equal "c_ymin / 2"
+# variable mid_y_u equal "ly / 4"
+# variable mid_y_l equal "-ly / 4"
+print "ymin: ${y_min} ymax: ${y_max}  upper_half_y: ${mid_y_u}	lower_half_y: ${mid_y_l}"
+variable mid_region_indx atom "y > v_mid_y_l && y < v_mid_y_u"
+group main_gb variable mid_region_indx
+variable n_mid_region_indx equal "count(main_gb)"
+print "mid_region_indx:${n_mid_region_indx}"
+compute csm_in_main main_gb centro/atom ${lat_type}
+compute eng_in_main main_gb pe/atom
+compute sum_main_eng main_gb reduce sum c_eng
+thermo_style custom step pe c_ymax c_sum_main_eng lx ly lz  xlo xhi ylo yhi zlo zhi xy xz yz
+thermo_modify lost ignore
+run 0
+variable gb_area equal "lx * lz"
+variable gb_eng equal "(c_sum_main_eng - count(main_gb) * v_MinEnergy) / v_gb_area * 16021.7733"
+print "gb_eng: ${gb_eng}"
+# The check
+variable hi_csm_mid_region_indx atom "y > v_mid_y_l && y < v_mid_y_u && c_csym > 0.1"
+compute tmp all reduce max c_csym
+thermo_style custom step pe c_ymax c_ymin c_tmp
+thermo_modify lost ignore
+run 0
+group hi_csm_main_gb variable hi_csm_mid_region_indx
+variable n_hi_csm_mid_region_indx equal "count(hi_csm_main_gb)"
+print "mid_region_indx:${n_hi_csm_mid_region_indx}"
+thermo_style custom step pe c_ymax c_ymin c_tmp c_sum_main_eng
+thermo_modify lost ignore
+run 0
+compute max_y_main_hi_csm hi_csm_main_gb reduce max y
+compute min_y_main_hi_csm hi_csm_main_gb reduce min y
+thermo_style custom step pe c_ymax c_ymin c_tmp c_sum_main_eng c_max_y_main_hi_csm c_min_y_main_hi_csm
+thermo_modify lost ignore
+run 0
+variable max_y_csm equal "c_max_y_main_hi_csm"
+variable min_y_csm equal "c_min_y_main_hi_csm"
+# # ----------------Writing output to a file -----------------
+print "max_y_main_hi_csm: ${max_y_csm}   min_y_main_hi_csm: ${min_y_csm}"
+# variable y_csm_limit_l equal  "0.9 * v_mid_y_l"
+# variable y_csm_limit_u equal  "0.9 * v_mid_y_u"
+# if "${min_y_csm} > ${y_csm_limit_l} && ${max_y_csm} < ${y_csm_limit_u}" then 'variable small_mid_region equal 1' else 'variable small_mid_region equal 0' 
+variable min_perfect_cryst_depth_l equal  "abs(0.55 * ylo)"
+variable min_perfect_cryst_depth_u equal  "abs(0.55 * yhi)"
+variable perfect_cryst_depth_l equal  "abs(v_y_min - v_min_y_csm)"
+variable perfect_cryst_depth_u equal  "abs(v_y_max - v_max_y_csm)"
+if "${perfect_cryst_depth_l} > ${min_perfect_cryst_depth_l} && ${perfect_cryst_depth_u} > ${min_perfect_cryst_depth_u} && ${max_y_csm} < ${mid_y_u} && ${min_y_csm} > ${mid_y_l}" then 'variable small_mid_region equal 1' else 'variable small_mid_region equal 0'
+print "small_mid_region: ${small_mid_region}"
+print "${gb_eng}	${gb_area}	${small_mid_region}	${perfect_cryst_depth_l}	${min_perfect_cryst_depth_l}	${perfect_cryst_depth_u}	${min_perfect_cryst_depth_u}	${mid_y_u}	${max_y_csm}	${min_y_csm}	${mid_y_l}" append ${fname3}
+# print "${gb_eng}	${gb_area}	${small_mid_region}" append GB_Eng.dat
