@@ -17,7 +17,7 @@ Inputs:
 =======
 1. ``gb_folder``      : create a folder with the name pattern shown in the provided example (e.g. ``15_al_S5_0_N1_1_-2_1_N2_-1_1_-2``). The boundary plane normal (bpn) indices are read from the folder name (can be changed later on). Indices followed by the N1 indicate the bpn indices of the lower crystal and those following the N2 indicate the indices of the upper crystal.
 
-2. ``folder_contents`` : the gb_folder must contain the following two files:
+2. ``folder-contents`` : the gb-folder must contain the following two files:
 	1. ``dump.*``      : The ``gb_folder`` must contain a file with pattern ``dump.*``.
 	2. ``gb_area``        : A file named ``gb_area`` that contains the area of the GB plane.
 
