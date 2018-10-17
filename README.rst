@@ -18,19 +18,19 @@ Inputs:
 1. ``gb_folder``      : create a folder with the name pattern shown in the provided example (e.g. ``15_al_S5_0_N1_1_-2_1_N2_-1_1_-2``). The boundary plane normal (bpn) indices are read from the folder name (can be changed later on). Indices followed by the N1 indicate the bpn indices of the lower crystal and those following the N2 indicate the indices of the upper crystal.
 
 2. ``folder_contents`` : the gb_folder must contain the following two files:
- 1. ``dump.*``      : The ``gb_folder`` must contain a file with pattern ``dump.*``.
- 2. ``gb_area``        : A file named ``gb_area`` that contains the area of the GB plane.
+	1. ``dump.*``      : The ``gb_folder`` must contain a file with pattern ``dump.*``.
+	2. ``gb_area``        : A file named ``gb_area`` that contains the area of the GB plane.
 
 3. ``gb_main_folder`` path  : full path to ``gb_folder``.
 
 4. Parameters defined in ``GBMC_RUN.m`` : ``GBMC_RUN.m`` is a matlab script that runs the simulation and contains the following parameters that are hard-coded in it:
- 1. ``lammps_exe_path`` : full path to the ``lammps`` executable on your system (e.g. '/usr/bin/lmp_daily').
- 2. ``max_steps``       : maximum number of Monte-Carlo steps (includes the rejected steps).
- 3. ``T``               : psuedo temperture in Kelvin for computing the insertion/removal probabilities (``0.5 x T_melting``).
- 4. ``elem``            : a string representing the name of the species that is simulated e.g. 'al', 'ni', 'cu', etc.
- 5. ``lat_param``       : lattice parameter in __angstroms__ e.g. 4.05 for _Al_.
- 6. ``lat_type``        : a string indicating the lattice type e.g. ``fcc``, ``bcc``, etc.
- 7. ``csm_crit``        : the critical centro-symmetry value than can identify the GB atoms (0.1 is enough for fcc). Can be easily expanded to other crteria for complicated system where csm does not work.
+	1. ``lammps_exe_path`` : full path to the ``lammps`` executable on your system (e.g. '/usr/bin/lmp_daily').
+	2. ``max_steps``       : maximum number of Monte-Carlo steps (includes the rejected steps).
+	3. ``T``               : psuedo temperture in Kelvin for computing the insertion/removal probabilities (``0.5 x T_melting``).
+	4. ``elem``            : a string representing the name of the species that is simulated e.g. 'al', 'ni', 'cu', etc.
+	5. ``lat_param``       : lattice parameter in __angstroms__ e.g. 4.05 for _Al_.
+	6. ``lat_type``        : a string indicating the lattice type e.g. ``fcc``, ``bcc``, etc.
+	7. ``csm_crit``        : the critical centro-symmetry value than can identify the GB atoms (0.1 is enough for fcc). Can be easily expanded to other crteria for complicated system where csm does not work.
 	
 
 
